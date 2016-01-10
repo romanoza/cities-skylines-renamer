@@ -41,3 +41,8 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+/RomanozasMod/bin/Debug
+/RomanozasMod/obj/Debug
+*.suo
+obj
+bin

@@ -14,60 +14,51 @@ namespace RomanozasMod
         // source: https://github.com/Alakaiser/Cities-Skylines-Stat-Button/blob/master/City%20Statistics%20Button/StatButton.cs
         public override void OnLevelLoaded(LoadMode mode) {
 
-            // Create the button and make it appear on the screen.
-            // UIView seems to be what is used to enable whatever element should be appearing.
-            // Without it, it seems like that element will never show up.
+            //Debug.Log("OnLevelLoaded");
+            var uiView = UIView.GetAView();
+            var btnRename = (UIButton)uiView.AddUIComponent(typeof(UIButton));
 
-            var boxuiView = UIView.GetAView();
-            var statButton = (UIButton)boxuiView.AddUIComponent(typeof(UIButton));
+            var uiView2 = GameObject.FindObjectOfType<UIView>();
+            if (uiView2 == null) return;
 
-            // This does more stuff.  Y'know.  Stuuuuuff.
+            btnRename.width = 135;
+            btnRename.height = 30;
 
-            var uiView = GameObject.FindObjectOfType<UIView>();
-            if (uiView == null) return;
+            btnRename.normalBgSprite = "ButtonMenu";
+            btnRename.hoveredBgSprite = "ButtonMenuHovered";
+            btnRename.focusedBgSprite = "ButtonMenuFocused";
+            btnRename.pressedBgSprite = "ButtonMenuPressed";
+            btnRename.textColor = new Color32(186, 217, 238, 0);
+            btnRename.disabledTextColor = new Color32(7, 7, 7, 255);
+            btnRename.hoveredTextColor = new Color32(7, 132, 255, 255);
+            btnRename.focusedTextColor = new Color32(255, 255, 255, 255);
+            btnRename.pressedTextColor = new Color32(30, 30, 44, 255);
 
-            // Define how big the button is!
-            // It's come to my attention that this may not display correctly in non-16:9 resolutions.
-            // I'll figure it out after I actually play video games for awhile.
+            btnRename.transformPosition = new Vector3(1.2f, -0.93f);
+            btnRename.BringToFront();
 
-            statButton.width = 125;
-            statButton.height = 30;
+            btnRename.text = "Rename Buildings!";
+            btnRename.playAudioEvents = true;
 
-            // Defines the colors and such of the button.  Fancy!
-            // The color values for statButton.textColor are that blue-ish color used on the UI to show your cash and population.
-            // Seemed right to also use that for my buttons.  Everything looking uniform is cool.
+            btnRename.eventClick += btnRename_Click;
+        }
 
-            statButton.normalBgSprite = "ButtonMenu";
-            statButton.hoveredBgSprite = "ButtonMenuHovered";
-            statButton.focusedBgSprite = "ButtonMenuFocused";
-            statButton.pressedBgSprite = "ButtonMenuPressed";
-            //statButton.textColor = new Color32(255, 255, 255, 255);
-            statButton.textColor = new Color32(186, 217, 238, 0);
-            statButton.disabledTextColor = new Color32(7, 7, 7, 255);
-            statButton.hoveredTextColor = new Color32(7, 132, 255, 255);
-            statButton.focusedTextColor = new Color32(255, 255, 255, 255);
-            statButton.pressedTextColor = new Color32(30, 30, 44, 255);
+        private void btnRename_Click(UIComponent component, UIMouseEventParameter eventParam) {
 
-            // .transformPosition places where the button will show up on the screen.  Vector3 uses x/y.  You can also set a Z coordinate but why would you do that here?
-            // I am not terribly good at stuff like vectors, so honestly, I've just been punching in numbers until it looks right.
-            // Look, I'm not here to judge.
+            /* Not much here, ironically!  Most/all of the functionality for this mode more or less existed in-game.
+             * You can insert any panel where "StatisticsPanel" is.  They're all contained in Assembly-CSharp.
+             * 
+             * Accessing whateverPanel should also allow us to add elements to these things.
+             * For instance, I'm fairly confident that I could add another graph to StatisticsPanel if
+             * I beat my head against it for long enough.
+             * 
+             * Go HOG WILD. http://imgur.com/sUK6b0m */
 
-            // BringToFront does exactly what you'd expect. It's part of the ColossalFramework.UI.UIComponent class.
-            // Without it, the button would end up behind the rest of the UI.
-            // Chances are when I go in to make sure buttons are displaying right at 16:10
-            // I'll have to do something with that.
+            // Debug.LogDebugMessage("Adding 'Generate City Report' button to UI");
 
-            statButton.transformPosition = new Vector3(1.2f, -0.93f);
-            statButton.BringToFront();
-
-            // Mmhm.  You know what this does.
-
-            statButton.text = "Rename Buildings!";
-
-            // Points the button towards the logic needed for the button to do stuff.
-
-            // statButton.eventClick += ButtonClick;
-
+            UIView.library.ShowModal("StatisticsPanel");
+            UIView.library.ShowModal("StatisticsPanel").BringToFront();
+            SimulationManager.instance.SimulationPaused = true;
         }
 
     }
