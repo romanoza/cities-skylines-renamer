@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ColossalFramework;
 using ColossalFramework.UI;
 using ICities;
 using UnityEngine;
@@ -18,10 +19,10 @@ namespace RomanozasMod
             var uiView = UIView.GetAView();
             var btnRename = (UIButton)uiView.AddUIComponent(typeof(UIButton));
 
-            var uiView2 = GameObject.FindObjectOfType<UIView>();
-            if (uiView2 == null) return;
+            //var uiView2 = GameObject.FindObjectOfType<UIView>();
+            //if (uiView2 == null) return;
 
-            btnRename.width = 135;
+            btnRename.width = 140;
             btnRename.height = 30;
 
             btnRename.normalBgSprite = "ButtonMenu";
@@ -54,11 +55,29 @@ namespace RomanozasMod
              * 
              * Go HOG WILD. http://imgur.com/sUK6b0m */
 
-            // Debug.LogDebugMessage("Adding 'Generate City Report' button to UI");
+            // SimulationManager.instance.SimulationPaused = true;
 
-            UIView.library.ShowModal("StatisticsPanel");
-            UIView.library.ShowModal("StatisticsPanel").BringToFront();
-            SimulationManager.instance.SimulationPaused = true;
+            // Debug.developerConsoleVisible = true;
+            DistrictManager districtManager = Singleton<DistrictManager>.instance;
+            District[] districts = districtManager.m_districts.m_buffer;
+            // Debug.Log("Districts " + districts.Length);
+
+            DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "Districts " + districts.Length);
+
+            // districtManager.m_districts.NextFreeItem()
+
+
+            // SimulationManager.instance.SimulationPaused = true;
+
+            //UIView.library.ShowModal("StatisticsPanel");
+            //UIView.library.ShowModal("StatisticsPanel").BringToFront();
+            //SimulationManager.instance.SimulationPaused = true;
+
+            //DistrictManager districtManager = Singleton<DistrictManager>.instance;
+            //District[] districts = districtManager.m_districts.m_buffer;
+            //foreach(District d in districts)
+            //    if(d != null)
+            //        d.
         }
 
     }
