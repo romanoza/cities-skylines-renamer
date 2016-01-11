@@ -4,23 +4,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ColossalFramework;
+using ColossalFramework.Plugins;
 using ColossalFramework.UI;
 using ICities;
 using UnityEngine;
 
 namespace RomanozasMod
 {
-    public class LoadingExtension: LoadingExtensionBase
+    public class LoadingExtension : LoadingExtensionBase
     {
-        // source: https://github.com/Alakaiser/Cities-Skylines-Stat-Button/blob/master/City%20Statistics%20Button/StatButton.cs
+        // from: https://github.com/Alakaiser/Cities-Skylines-Stat-Button/blob/master/City%20Statistics%20Button/StatButton.cs
         public override void OnLevelLoaded(LoadMode mode) {
 
-            //Debug.Log("OnLevelLoaded");
             var uiView = UIView.GetAView();
             var btnRename = (UIButton)uiView.AddUIComponent(typeof(UIButton));
-
-            //var uiView2 = GameObject.FindObjectOfType<UIView>();
-            //if (uiView2 == null) return;
 
             btnRename.width = 140;
             btnRename.height = 30;
@@ -44,22 +41,139 @@ namespace RomanozasMod
             btnRename.eventClick += btnRename_Click;
         }
 
-        // https://github.com/Rychard/CityWebServer/
+        // from: https://github.com/Rychard/CityWebServer/ & https://github.com/Alakaiser/Cities-Skylines-Stat-Button/blob/master/City%20Statistics%20Button/StatButton.cs
         private void btnRename_Click(UIComponent component, UIMouseEventParameter eventParam) {
 
-            /* Not much here, ironically!  Most/all of the functionality for this mode more or less existed in-game.
-             * You can insert any panel where "StatisticsPanel" is.  They're all contained in Assembly-CSharp.
-             * 
-             * Accessing whateverPanel should also allow us to add elements to these things.
-             * For instance, I'm fairly confident that I could add another graph to StatisticsPanel if
-             * I beat my head against it for long enough.
-             * 
-             * Go HOG WILD. http://imgur.com/sUK6b0m */
-
             // SimulationManager.instance.SimulationPaused = true;
+            // Debug.developerConsoleVisible = true;
+            try {
+                DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "Started");
+                DistrictManager districtManager = Singleton<DistrictManager>.instance;
+                Dictionary<int, string> districtNames = new Dictionary<int, string>();
+                District[] districts = districtManager.m_districts.m_buffer;
+                int i = 0;
+                foreach (District d in districts) {
+                    string districtName;
+                    if (i == 0)
+                        districtName = null;
+                    else
+                        districtName = districtManager.GetDistrictName(i);
+                    if (d.IsValid() && d.IsAlive() && districtName != null)
+                        districtNames[i] = districtManager.GetDistrictName(i);
+                    i++;
+                }
+                DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "District list build");
+                Dictionary<int, int> districtBuildingCount = new Dictionary<int, int>();
+                BuildingManager buildingManager = Singleton<BuildingManager>.instance;
+                ushort j = 0;
+                foreach (Building building in buildingManager.m_buildings.m_buffer) {
+                    if (building.m_flags != Building.Flags.None) {
+                        string typeName = null;
+                        switch (building.Info.GetService()) {
+                            case ItemClass.Service.Residential: typeName = "Dom"; break;
+                            case ItemClass.Service.Office: typeName = "Biuro"; break;
+                            case ItemClass.Service.Commercial: typeName = "Sklep"; break;
+                            case ItemClass.Service.Industrial: if (building.Info.GetSubService() == ItemClass.SubService.IndustrialGeneric) typeName = "Fabryka"; break;
+                        }
+                        if (typeName != null) {
+                            int districtId = (int)districtManager.GetDistrict(building.m_position);
+                            if (districtNames.ContainsKey(districtId)) {
 
-            //// Debug.developerConsoleVisible = true;
-            DistrictManager districtManager = Singleton<DistrictManager>.instance;
+                                if (districtBuildingCount.ContainsKey(districtId))
+                                    districtBuildingCount[districtId]++;
+                                else
+                                    districtBuildingCount[districtId] = 1;
+                                int lastCount = districtBuildingCount[districtId];
+
+                                string districtName = districtNames[districtId];
+                                string newName = string.Format("{0}, {1} {2}", typeName, districtName, lastCount);
+
+                                var res = buildingManager.SetBuildingName(j, newName);
+                                while (res.MoveNext()) { }
+                            }
+                            else
+                                DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "District name not found for districtId = " + districtId);
+                        }
+                    }
+                    j++;
+                }
+            }
+            catch (Exception ex) {
+                DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, ex.Message);
+            }
+
+
+            //                    DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "districtName " + districtName);
+            //                DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "isvalid " + d.IsValid());
+            //                DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "isactive " + d.IsAlive());
+            //                if (d.IsValid() && d.IsAlive()) {
+            //                    DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "ustaw nazwe dzielnica " + i);
+            //                    var res = districtManager.SetDistrictName(i, "Dzielnica " + i);
+            //                    while (res.MoveNext()) //Loop while there are more elements
+            //{
+            //                        // DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, res.Current; //Do something with current element
+            //                    }
+
+            //foreach (bool b in res)
+            //    DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "ustaw nazwe");
+            //    }
+            //    i++;
+            //}
+
+            //BuildingManager instance = Singleton<BuildingManager>.instance;
+            //DistrictManager districtManager = Singleton<DistrictManager>.instance;
+            //foreach (Building building in instance.m_buildings.m_buffer) {
+            //    int districtId = (int)districtManager.GetDistrict(building.m_position);
+            //    if (districtId != 0) {
+            //        string districtName = districtManager.GetDistrictName(i);
+            //    }
+            //}
+
+            //    DistrictManager districtManager = Singleton<DistrictManager>.instance;
+            //District[] districts = districtManager.m_districts.m_buffer;
+
+            //int i = 0;
+            //Dictionary<int, string> districtBuildings = new Dictionary<int, int>();
+            //foreach (District d in districts) {
+            //    string districtName;
+            //    if (i == 0)
+            //        districtName = null;
+            //    else
+            //        districtName = districtManager.GetDistrictName(i);
+            //    if (d.IsValid() && d.IsAlive() && districtName != null) {
+
+            //        Dictionary<int, int> districtBuildings = new Dictionary<int, int>();
+            //        BuildingManager instance = Singleton<BuildingManager>.instance;
+            //        foreach (Building building in instance.m_buildings.m_buffer) {
+            //            if (building.m_flags == Building.Flags.None) { continue; }
+            //            var districtID = (int)districtManager.GetDistrict(building.m_position);
+            //            if (districtBuildings.ContainsKey(districtID)) {
+            //                districtBuildings[districtID]++;
+            //            }
+            //            else {
+            //                districtBuildings.Add(districtID, 1);
+            //            }
+            //        }
+            //        return districtBuildings;
+
+
+            //        //                    DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "districtName " + districtName);
+            //        //                DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "isvalid " + d.IsValid());
+            //        //                DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "isactive " + d.IsAlive());
+            //        //                if (d.IsValid() && d.IsAlive()) {
+            //        //                    DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "ustaw nazwe dzielnica " + i);
+            //        //                    var res = districtManager.SetDistrictName(i, "Dzielnica " + i);
+            //        //                    while (res.MoveNext()) //Loop while there are more elements
+            //        //{
+            //        //                        // DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, res.Current; //Do something with current element
+            //        //                    }
+
+            //        //foreach (bool b in res)
+            //        //    DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "ustaw nazwe");
+            //    }
+            //    i++;
+            //}
+
             //District[] districts = districtManager.m_districts.m_buffer;
             //// Debug.Log("Districts " + districts.Length);
 
@@ -69,40 +183,40 @@ namespace RomanozasMod
             //DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "0 district name " + districtManager.GetDistrictName(0));
             //d.dist
 
-            DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "start");
-            District[] districts = districtManager.m_districts.m_buffer;
-            DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "Districts " + districts.Length);
+            //            DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "start");
+            //            District[] districts = districtManager.m_districts.m_buffer;
+            //            DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "Districts " + districts.Length);
 
-            int i = 0;
-            foreach(District d in districts) {
-                
-                DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "index " + i);
-                string districtName = districtManager.GetDistrictName(i);
-                DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "districtName " + districtName);
-                DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "isvalid " + d.IsValid());
-                DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "isactive " + d.IsAlive());
-                if (d.IsValid() && d.IsAlive()) {
-                    DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "ustaw nazwe dzielnica " + i);
-                    var res = districtManager.SetDistrictName(i, "Dzielnica " + i);
-                    while (res.MoveNext()) //Loop while there are more elements
-{
-                        // DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, res.Current; //Do something with current element
-                    }
+            //            int i = 0;
+            //            foreach(District d in districts) {
 
-                    //foreach (bool b in res)
-                    //    DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "ustaw nazwe");
-                }
-                i++;
-            }
+            //                DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "index " + i);
+            //                string districtName = districtManager.GetDistrictName(i);
+            //                DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "districtName " + districtName);
+            //                DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "isvalid " + d.IsValid());
+            //                DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "isactive " + d.IsAlive());
+            //                if (d.IsValid() && d.IsAlive()) {
+            //                    DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "ustaw nazwe dzielnica " + i);
+            //                    var res = districtManager.SetDistrictName(i, "Dzielnica " + i);
+            //                    while (res.MoveNext()) //Loop while there are more elements
+            //{
+            //                        // DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, res.Current; //Do something with current element
+            //                    }
+
+            //                    //foreach (bool b in res)
+            //                    //    DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "ustaw nazwe");
+            //                }
+            //                i++;
+            //            }
 
 
             //DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "Districts " + districts.Length);
 
-            foreach (int districtID in DistrictInfo.GetDistricts()) {
-                string districtName = districtManager.GetDistrictName(districtID);
-                DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "districtName " + districtName);
-                districtManager.SetDistrictName(districtID, "Dzielnica " + districtID);
-            }
+            //foreach (int districtID in DistrictInfo.GetDistricts()) {
+            //    string districtName = districtManager.GetDistrictName(districtID);
+            //    DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "districtName " + districtName);
+            //    districtManager.SetDistrictName(districtID, "Dzielnica " + districtID);
+            //}
 
             //districtManager.SetDistrictName(0, "Test");
             //districtManager.GetDistrictName(0);
@@ -110,7 +224,7 @@ namespace RomanozasMod
             //BuildingManager bm = Singleton<BuildingManager>.instance;
             //uint bc = bm.m_buildings.ItemCount();
             //DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "Buildings " + bc);
-            
+
             //Building b = bm.m_buildings.m_buffer[0];
 
             //int instanceId = b.Info.GetInstanceID();
@@ -291,7 +405,7 @@ namespace RomanozasMod
                 DistrictID = districtID,
                 DistrictName = districtName,
                 TotalPopulationCount = (int)district.m_populationData.m_finalCount,
-          //      PopulationData = GetPopulationGroups(districtID),
+                //      PopulationData = GetPopulationGroups(districtID),
                 CurrentHouseholds = (int)district.m_residentialData.m_finalAliveCount,
                 AvailableHouseholds = (int)district.m_residentialData.m_finalHomeOrWorkCount,
                 CurrentJobs = (int)district.m_commercialData.m_finalAliveCount + (int)district.m_industrialData.m_finalAliveCount + (int)district.m_officeData.m_finalAliveCount + (int)district.m_playerData.m_finalAliveCount,
@@ -299,7 +413,7 @@ namespace RomanozasMod
                 AverageLandValue = district.GetLandValue(),
                 Pollution = pollution,
                 WeeklyTouristVisits = (int)district.m_tourist1Data.m_averageCount + (int)district.m_tourist2Data.m_averageCount + (int)district.m_tourist3Data.m_averageCount,
-            //    Policies = GetPolicies().ToArray(),
+                //    Policies = GetPolicies().ToArray(),
             };
             return model;
         }

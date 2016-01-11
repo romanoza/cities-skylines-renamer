@@ -55,7 +55,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChirperExtension.cs" />
     <Compile Include="LoadingExtension.cs" />
+    <Compile Include="Message.cs" />
     <Compile Include="RomanozasModInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
