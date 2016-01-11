@@ -69,13 +69,24 @@ namespace RomanozasMod
                 BuildingManager buildingManager = Singleton<BuildingManager>.instance;
                 ushort j = 0;
                 foreach (Building building in buildingManager.m_buildings.m_buffer) {
-                    if (building.m_flags.HasFlag(Building.Flags.Created)) {
+                    if ((building.m_flags & Building.Flags.Created) == Building.Flags.Created) {
                         string typeName = null;
+                        BuildingAI buildingAI = building.Info.m_buildingAI;
                         switch (building.Info.GetService()) {
-                            case ItemClass.Service.Beautification: typeName = "Park " + building.Info.GetSubService().ToString(); break;
-                            case ItemClass.Service.PoliceDepartment: typeName = "Posterunek " + building.Info.GetSubService().ToString(); break;
-                            case ItemClass.Service.FireDepartment: typeName = "Remiza " + building.Info.GetSubService().ToString(); break;
-                            case ItemClass.Service.HealthCare: typeName = "Przychodnia " + building.Info.GetSubService().ToString(); break;
+                            case ItemClass.Service.Beautification: typeName = "Park"; break;
+                            case ItemClass.Service.PoliceDepartment: typeName = "Posterunek"; break;
+                            case ItemClass.Service.FireDepartment: typeName = "Remiza"; break;
+                            case ItemClass.Service.HealthCare:
+                                if (buildingAI is CemeteryAI) {
+                                    if ((buildingAI as CemeteryAI).m_graveCount > 0)
+                                        typeName = "Cmentarz";
+                                    else
+                                        typeName = "Krematorium";
+                                    // DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, string.Format("Burial rate {0}, corpse capacity {1}, grave count {2}", (buildingAI as CemeteryAI).m_burialRate, (buildingAI as CemeteryAI).m_corpseCapacity, (buildingAI as CemeteryAI).m_graveCount));
+                                }
+                                else
+                                    typeName = "Przychodnia";
+                                break; 
                             case ItemClass.Service.Residential:
                                 switch (building.Info.GetSubService()) {
                                     case ItemClass.SubService.ResidentialLow: typeName = "Dom"; break;
@@ -88,6 +99,8 @@ namespace RomanozasMod
                                 switch (building.Info.GetSubService()) {
                                     case ItemClass.SubService.CommercialLeisure: typeName = "Restauracja"; break;
                                     case ItemClass.SubService.CommercialTourist: typeName = "Hotel"; break;
+                                    case ItemClass.SubService.CommercialLow: typeName = "Sklep"; break;
+                                    case ItemClass.SubService.CommercialHigh: typeName = "Dom Handlowy"; break;
                                     default: typeName = "Sklep"; break;
                                 }
                                 break;
@@ -113,8 +126,8 @@ namespace RomanozasMod
                                 string districtName = districtNames[districtId];
                                 string newName = string.Format("{0}, {1} {2}", typeName, districtName, lastCount);
 
-                                string oldName = "test"; // buildingManager.GetBuildingName(j, new InstanceID());
-                                if (!oldName.Contains(" im. ") && oldName != newName) {
+                                string oldName = buildingManager.GetBuildingName(j, new InstanceID());
+                                if (oldName == null || (!oldName.Contains(" im. ") && oldName != newName)) {
                                     var res = buildingManager.SetBuildingName(j, newName);
                                     while (res.MoveNext()) { } // CitizenManager.instance.StartCoroutine(CitizenManager.instance.SetCitizenName(id, name));
                                 }
