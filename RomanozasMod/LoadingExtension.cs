@@ -61,7 +61,7 @@ namespace RomanozasMod
                     else
                         districtName = districtManager.GetDistrictName(i);
                     if (d.IsValid() && d.IsAlive() && districtName != null)
-                        districtNames[i] = districtName;
+                        districtNames[i] = districtName.Replace("\"", string.Empty); // usuń z nazw dzielnic cudzysłowia
                     i++;
                 }
                 DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "District list build");
@@ -76,13 +76,13 @@ namespace RomanozasMod
                         // string fullName = buildingManager.GetBuildingName(j, instanceId);
                         string oldName = buildingManager.GetBuildingName(j, instanceId);
                         string typeName = null;
-                        if (oldName != null) {
-                            string[] fullNameParts = oldName.Split(',');
-                            if (fullNameParts.Length > 0)
-                                typeName = fullNameParts[0];
-                        };
+                        //if (oldName != null) {
+                        //    string[] fullNameParts = oldName.Split(',');
+                        //    if (fullNameParts.Length > 0)
+                        //        typeName = fullNameParts[0];
+                        //};
 
-                        bool customized = oldName != null && oldName.Contains(" im. ");
+                        bool customized = oldName != null && (oldName.Contains(" im. ") || (oldName.Contains("\"")));
                         BuildingAI buildingAI = building.Info.m_buildingAI;
 
                         if((string.IsNullOrEmpty(typeName) || /* zawsze renumeruj szkoły */ buildingAI is SchoolAI) && !customized) {
@@ -107,7 +107,7 @@ namespace RomanozasMod
                                         SchoolAI ai = buildingAI as SchoolAI;
                                         int max = new int[] { ai.m_workPlaceCount0, ai.m_workPlaceCount1, ai.m_workPlaceCount2, ai.m_workPlaceCount3 }.Max();
                                         if (max == ai.m_workPlaceCount0) {
-                                            if(!customized)
+                                            if (!customized)
                                                 typeName = $"SP {++spNumber}";
                                         }
                                         else
@@ -121,8 +121,8 @@ namespace RomanozasMod
                                         //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, string.Format("Student count {0}, m_workPlaceCount0 {1}, m_workPlaceCount1 {2}", (buildingAI as SchoolAI).m_studentCount, (buildingAI as SchoolAI).m_workPlaceCount0, (buildingAI as SchoolAI).m_workPlaceCount1));
                                         //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "buildingAI type: " + buildingAI.GetType().ToString());
                                         //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "subservice: " + building.Info.GetSubService().ToString());
-                                        DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "customized: " + customized);
-                                        DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "typeName: " + typeName);
+                                        ////DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "customized: " + customized);
+                                        ////DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "typeName: " + typeName);
                                     };
                                     break;
                                 case ItemClass.Service.Residential:
@@ -171,7 +171,6 @@ namespace RomanozasMod
                                 string districtName = districtNames[districtId];
                                 string newName = string.Format("{0}, {1} {2}", typeName, districtName, lastCount);
 
-                                //string oldName = buildingManager.GetBuildingName(j, instanceId);
                                 if (!customized && oldName != newName) {
                                     var res = buildingManager.SetBuildingName(j, newName);
                                     while (res.MoveNext()) { } // CitizenManager.instance.StartCoroutine(CitizenManager.instance.SetCitizenName(id, name));
@@ -184,7 +183,7 @@ namespace RomanozasMod
                     j++;
                 }
                 // send message
-                MessageManager.instance.QueueMessage(new Message("Nowe numery domów! Znowu trzeba nieco zmieniać pieczątki :("));
+                MessageManager.instance.QueueMessage(new Message("Nowe numery domów! Znowu trzeba zmieniać pieczątki :("));
             }
             catch (Exception ex) {
                 DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, ex.Message);
