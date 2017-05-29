@@ -49,6 +49,11 @@ namespace RomanozasMod
             try {
                 DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "Started");
                 DistrictManager districtManager = Singleton<DistrictManager>.instance;
+                NetManager netManager = Singleton<NetManager>.instance;
+
+                // NetSegment netSegment = netManager.m_segments.m_buffer[(int)netSegmentId];
+                
+
                 Dictionary<int, string> districtNames = new Dictionary<int, string>();
                 District[] districts = districtManager.m_districts.m_buffer;
                 int i = 0;
@@ -156,28 +161,82 @@ namespace RomanozasMod
 
                         if (typeName != null) {
                             int districtId = (int)districtManager.GetDistrict(building.m_position);
+                            ushort segmentId;
+                            ushort[] segments = new ushort[16];
+                            int segmentCount;
+
+                            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "pierwszy segment");
+
+                            netManager.GetClosestSegments(building.m_position, segments, out segmentCount);
+                            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "segmentCount: " + segmentCount);
+                            segmentId = segments[0];
+                            NetInfo netInfo = netManager.m_segments.m_buffer[segmentId].Info;
+                            //segmentId = segments.FirstOrDefault(sid => {
+                            //    NetSegment netSegment = netManager.m_segments.m_buffer[sid];
+                            //    //if ((netSegment.m_flags & NetSegment.Flags.Created) == NetSegment.Flags.Created) {
+                            //        NetInfo netInfo = netManager.m_segments.m_buffer[sid].Info;
+                            //    return true; //  netInfo.GetComponent<RoadBaseAI>() != null;
+                            //    //}
+                            //    //else
+                            //     //   return false;
+                            //});
+
+                            //NetSegment netSegment = netManager.m_segments.m_buffer[segmentId];
+                            string segmentName = netManager.GetSegmentName(segmentId);
+                            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "segmentId: " + segmentId);
+
+                            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "isRoadBaseAI: " + (netInfo.GetComponent<RoadBaseAI>() != null));
+
+                            // string category = netInfo.category;
+                            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "segmentName: " + segmentName);
+                            //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "category: " + category);
+
+                            //if(string.IsNullOrWhiteSpace(segmentName)) {
+                            //    DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "drugi segment");
+                            //    segmentId = segments[1];
+
+                            //    netInfo = netManager.m_segments.m_buffer[segmentId].Info;
+
+                            //    segmentName = netManager.GetSegmentName(segmentId);
+                            //    DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "segmentId: " + segmentId);
+
+                            //    DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "isRoadBaseAI: " + (netInfo.GetComponent<RoadBaseAI>() != null));
+
+                            //    DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "segmentName: " + segmentName);
+                            //}
+
+                            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "is road service: " + (netInfo.m_class.m_service == ItemClass.Service.Road));
+
+                            for(j = 0; j < segmentCount; j++) {
+                                ushort num4 = segments[j];
+                                NetInfo info2 = Singleton<NetManager>.instance.m_segments.m_buffer[(int)num4].Info;
+                                DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "segment: " + j + " is road service: " + (info2.m_class.m_service == ItemClass.Service.Road));
+                            }
+
                             // multi key dictionary: http://stackoverflow.com/questions/1171812/multi-key-dictionary-in-c
-                            if (districtNames.ContainsKey(districtId)) {
+                            //if (districtNames.ContainsKey(districtId)) {
 
-                                if (districtBuildingCount.ContainsKey(districtId))
-                                    districtBuildingCount[districtId]++;
-                                else
-                                    districtBuildingCount[districtId] = 1;
-                                int lastCount = districtBuildingCount[districtId];
+                            //if (districtBuildingCount.ContainsKey(districtId))
+                            //    districtBuildingCount[districtId]++;
+                            //else
+                            //    districtBuildingCount[districtId] = 1;
+                            //int lastCount = districtBuildingCount[districtId];
+                            int lastCount = 10;
 
-                                //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "lastCount: " + lastCount);
-                                //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "flags: " + building.m_flags.ToString());
+                            //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "lastCount: " + lastCount);
+                            //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "flags: " + building.m_flags.ToString());
 
-                                string districtName = districtNames[districtId];
+                            // string districtName = districtNames[districtId];
+                            string districtName = netManager.GetSegmentName(segmentId);
                                 string newName = string.Format("{0}, {1} {2}", typeName, districtName, lastCount);
 
                                 if (!customized && oldName != newName) {
                                     var res = buildingManager.SetBuildingName(j, newName);
                                     while (res.MoveNext()) { } // CitizenManager.instance.StartCoroutine(CitizenManager.instance.SetCitizenName(id, name));
                                 }
-                            }
-                            else
-                                DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "District name not found for districtId = " + districtId);
+                            //}
+                            //else
+                            //    DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "District name not found for districtId = " + districtId);
                         }
                     }
                     j++;
