@@ -41,6 +41,8 @@ namespace RomanozasMod
             btnRename.eventClick += btnRename_Click;
         }
 
+        ushort[] _closeSegments = new ushort[16];
+
         // from: https://github.com/Rychard/CityWebServer/ & https://github.com/Alakaiser/Cities-Skylines-Stat-Button/blob/master/City%20Statistics%20Button/StatButton.cs
         private void btnRename_Click(UIComponent component, UIMouseEventParameter eventParam) {
 
@@ -159,36 +161,39 @@ namespace RomanozasMod
                             }
                         }
 
+                        string segmentName = null;
+
                         if (typeName != null) {
                             int districtId = (int)districtManager.GetDistrict(building.m_position);
                             ushort segmentId;
-                            ushort[] segments = new ushort[16];
-                            int segmentCount;
+                            int closeSegmentCount;
 
-                            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "pierwszy segment");
+                            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Looking for segments");
+                            netManager.GetClosestSegments(building.m_position, _closeSegments, out closeSegmentCount);
 
-                            netManager.GetClosestSegments(building.m_position, segments, out segmentCount);
-                            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "segmentCount: " + segmentCount);
-                            segmentId = segments[0];
-                            NetInfo netInfo = netManager.m_segments.m_buffer[segmentId].Info;
-                            //segmentId = segments.FirstOrDefault(sid => {
-                            //    NetSegment netSegment = netManager.m_segments.m_buffer[sid];
-                            //    //if ((netSegment.m_flags & NetSegment.Flags.Created) == NetSegment.Flags.Created) {
-                            //        NetInfo netInfo = netManager.m_segments.m_buffer[sid].Info;
-                            //    return true; //  netInfo.GetComponent<RoadBaseAI>() != null;
-                            //    //}
-                            //    //else
-                            //     //   return false;
-                            //});
+                            for (int sc = 0; sc < closeSegmentCount; sc++) {
+                                segmentId = _closeSegments[sc];
+                                NetInfo info = Singleton<NetManager>.instance.m_segments.m_buffer[(int)segmentId].Info;
+
+                                if (info.m_class.m_service == ItemClass.Service.Road) {
+                                    segmentName = netManager.GetSegmentName(segmentId);
+                                    break;
+                                }
+                                // DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "segment: " + j + " is road service: " + (info2.m_class.m_service == ItemClass.Service.Road));
+                            }
+
+                            //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "segmentCount: " + segmentCount);
+                            //segmentId = segments[0];
+                            //NetInfo netInfo = netManager.m_segments.m_buffer[segmentId].Info;
 
                             //NetSegment netSegment = netManager.m_segments.m_buffer[segmentId];
-                            string segmentName = netManager.GetSegmentName(segmentId);
-                            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "segmentId: " + segmentId);
+                            // string segmentName = netManager.GetSegmentName(segmentId);
+                            //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "segmentId: " + segmentId);
 
-                            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "isRoadBaseAI: " + (netInfo.GetComponent<RoadBaseAI>() != null));
+                            //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "isRoadBaseAI: " + (netInfo.GetComponent<RoadBaseAI>() != null));
 
-                            // string category = netInfo.category;
-                            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "segmentName: " + segmentName);
+                            //// string category = netInfo.category;
+                            //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "segmentName: " + segmentName);
                             //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "category: " + category);
 
                             //if(string.IsNullOrWhiteSpace(segmentName)) {
@@ -205,13 +210,13 @@ namespace RomanozasMod
                             //    DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "segmentName: " + segmentName);
                             //}
 
-                            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "is road service: " + (netInfo.m_class.m_service == ItemClass.Service.Road));
+                            // DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "is road service: " + (netInfo.m_class.m_service == ItemClass.Service.Road));
 
-                            for(j = 0; j < segmentCount; j++) {
-                                ushort num4 = segments[j];
-                                NetInfo info2 = Singleton<NetManager>.instance.m_segments.m_buffer[(int)num4].Info;
-                                DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "segment: " + j + " is road service: " + (info2.m_class.m_service == ItemClass.Service.Road));
-                            }
+                            //for(j = 0; j < segmentCount; j++) {
+                            //    ushort num4 = segments[j];
+                            //    NetInfo info2 = Singleton<NetManager>.instance.m_segments.m_buffer[(int)num4].Info;
+                            //    DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "segment: " + j + " is road service: " + (info2.m_class.m_service == ItemClass.Service.Road));
+                            //}
 
                             // multi key dictionary: http://stackoverflow.com/questions/1171812/multi-key-dictionary-in-c
                             //if (districtNames.ContainsKey(districtId)) {
@@ -226,9 +231,10 @@ namespace RomanozasMod
                             //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "lastCount: " + lastCount);
                             //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "flags: " + building.m_flags.ToString());
 
-                            // string districtName = districtNames[districtId];
-                            string districtName = netManager.GetSegmentName(segmentId);
-                                string newName = string.Format("{0}, {1} {2}", typeName, districtName, lastCount);
+                            string districtName = districtNames[districtId];
+                            // string districtName = netManager.GetSegmentName(segmentId);
+                            string newAddress = segmentName;
+                            string newName = string.Format("{0}, {1} {2}", typeName, newAddress, lastCount);
 
                                 if (!customized && oldName != newName) {
                                     var res = buildingManager.SetBuildingName(j, newName);
