@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,7 +16,7 @@ namespace RomanozasMod
     {
         // from: https://github.com/Alakaiser/Cities-Skylines-Stat-Button/blob/master/City%20Statistics%20Button/StatButton.cs
         public override void OnLevelLoaded(LoadMode mode) {
-            
+
             var uiView = UIView.GetAView();
             var btnRename = (UIButton)uiView.AddUIComponent(typeof(UIButton));
 
@@ -45,10 +46,13 @@ namespace RomanozasMod
 
         // from: https://github.com/Rychard/CityWebServer/ & https://github.com/Alakaiser/Cities-Skylines-Stat-Button/blob/master/City%20Statistics%20Button/StatButton.cs
         private void btnRename_Click(UIComponent component, UIMouseEventParameter eventParam) {
-
             // SimulationManager.instance.SimulationPaused = true;
             // Debug.developerConsoleVisible = true;
-            try {
+            rename();
+        }
+
+        void rename() {
+            //try {
                 DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "Started");
                 DistrictManager districtManager = Singleton<DistrictManager>.instance;
                 NetManager netManager = Singleton<NetManager>.instance;
@@ -89,8 +93,8 @@ namespace RomanozasMod
                         bool customized = oldName != null && (oldName.Contains(" im. ") || (oldName.Contains("\"")));
                         BuildingAI buildingAI = building.Info.m_buildingAI;
 
-                        if((string.IsNullOrEmpty(typeName) || /* zawsze renumeruj szkoły */ buildingAI is SchoolAI) && !customized) {
-                            
+                        if ((string.IsNullOrEmpty(typeName) || /* zawsze renumeruj szkoły */ buildingAI is SchoolAI) && !customized) {
+
                             switch (building.Info.GetService()) {
                                 case ItemClass.Service.Beautification: typeName = "Park"; break;
                                 case ItemClass.Service.PoliceDepartment: typeName = "Posterunek"; break;
@@ -168,52 +172,62 @@ namespace RomanozasMod
                             DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Looking for segments");
                             netManager.GetClosestSegments(building.m_position, _closeSegments, out closeSegmentCount);
 
-                            //for (int sc = 0; sc < closeSegmentCount; sc++) {
-                            //    segmentId = _closeSegments[sc];
-                            //    NetInfo info = Singleton<NetManager>.instance.m_segments.m_buffer[(int)segmentId].Info;
+                            for (int sc = 0; sc < closeSegmentCount; sc++) {
+                                segmentId = _closeSegments[sc];
+                                NetInfo info = Singleton<NetManager>.instance.m_segments.m_buffer[(int)segmentId].Info;
 
-                            //    if (info.m_class.m_service == ItemClass.Service.Road) {
-                            //        segmentName = netManager.GetSegmentName(segmentId);
-                            //        break;
-                            //    }
-                            //}
-                            segmentId = building.FindSegment(ItemClass.Service.Road, ItemClass.SubService.None, ItemClass.Layer.Default);
-                            segmentName = netManager.GetSegmentName(segmentId);
+                                if (info.m_class.m_service == ItemClass.Service.Road) {
+                                    segmentName = netManager.GetSegmentName(segmentId);
+                                    if (!string.IsNullOrEmpty(segmentName))
+                                        break;
+                                }
+                            }
+
+                            //segmentId = building.FindSegment(ItemClass.Service.Road, ItemClass.SubService.None, ItemClass.Layer.Default);
+                            //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "segmentId: " + segmentId);
+                            //segmentName = netManager.GetSegmentName(segmentId);
+                            //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "segmentName: " + segmentName);
 
                             // multi key dictionary: http://stackoverflow.com/questions/1171812/multi-key-dictionary-in-c
                             if (districtNames.ContainsKey(districtId)) {
 
                                 if (districtBuildingCount.ContainsKey(districtId))
-                                districtBuildingCount[districtId]++;
-                            else
-                                districtBuildingCount[districtId] = 1;
-                            int lastCount = districtBuildingCount[districtId];
-                            // int lastCount = 10;
+                                    districtBuildingCount[districtId]++;
+                                else
+                                    districtBuildingCount[districtId] = 1;
+                                int lastCount = districtBuildingCount[districtId];
+                                // int lastCount = 10;
 
-                            //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "lastCount: " + lastCount);
-                            //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "flags: " + building.m_flags.ToString());
+                                //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "lastCount: " + lastCount);
+                                //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "flags: " + building.m_flags.ToString());
 
-                            string districtName = districtNames[districtId];
-                            string streetName = segmentName;
-                            string newName = string.Format("{0}, {1} ({2} {3})", typeName, streetName, districtName, lastCount);
+                                string districtName = districtNames[districtId];
+                                string streetName = segmentName;
 
-                                if (!customized && oldName != newName) {
-                                    var res = buildingManager.SetBuildingName(j, newName);
-                                    while (res.MoveNext()) { } // CitizenManager.instance.StartCoroutine(CitizenManager.instance.SetCitizenName(id, name));
-                                }
+                                string newName;
+                                if (!string.IsNullOrEmpty(streetName))
+                                    newName = string.Format("{0}, {1}, {2} {3}", typeName, streetName, districtName, lastCount);
+                                else
+                                    newName = string.Format("{0}, {1} {2}", typeName, districtName, lastCount);
+
+                            if (!customized && oldName != newName) {
+                                var res = buildingManager.SetBuildingName(j, newName);
+                                while (res.MoveNext()) { } // CitizenManager.instance.StartCoroutine(CitizenManager.instance.SetCitizenName(id, name));
                             }
+                        }
                             else
                                 DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "District name not found for districtId = " + districtId);
                         }
                     }
                     j++;
+                    //yield return null;
                 }
                 // send message
                 MessageManager.instance.QueueMessage(new Message("Nowe numery domów! Znowu trzeba zmieniać pieczątki :("));
-            }
-            catch (Exception ex) {
-                DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, ex.Message);
-            }
+            //}
+            //catch (Exception ex) {
+            //    DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, ex.Message);
+            //}
         }
 
         private static string toRoman(int number, bool upperCase = true) {
