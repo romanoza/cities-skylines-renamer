@@ -54,8 +54,9 @@ namespace RomanozasMod
         void rename2() {
             try {
                 DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Started");
-                Street[] streets = MyUtils.GetStreets();
-                DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Streets: " + streets.Length);
+                List<Street> streets = MyUtils.GetStreets();
+                MyUtils.FillBuildings(streets);
+                DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Streets: " + streets.Count);
                 foreach (Street street in streets) {
                     DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Street: " + street.Name);
                     DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Budynków: " + street.Buildings.Count);
@@ -261,7 +262,7 @@ namespace RomanozasMod
             }
         }
 
-        private static string toRoman(int number, bool upperCase = true) {
+        public static string toRoman(int number, bool upperCase = true) {
             if (number < 0)
                 throw new ArgumentOutOfRangeException("number", number, "Liczba musi być większa od zera.");
             string[] romans = new string[] { "I", "IV", "V", "IX", "X", "XL", "L", "XC", "C", "CD", "D", "CM", "M" };
