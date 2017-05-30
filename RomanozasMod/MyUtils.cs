@@ -27,28 +27,49 @@ namespace RomanozasMod
         private Vector3 getBeginPosition() {
             // return new Vector3();
             NetManager netManager = Singleton<NetManager>.instance;
-            NetNode endNode;
+            NetNode? resNode = null;
             ushort segmentId = netSegments[0];
+            List<ushort> visitedSegments = new List<ushort>();
             do {
+                visitedSegments.Add(segmentId);
                 NetSegment segment = netManager.m_segments.m_buffer[segmentId];
-                endNode = netManager.m_nodes.m_buffer[segment.m_endNode];
+                NetNode endNode = netManager.m_nodes.m_buffer[segment.m_endNode];
+                if (resNode == null)
+                    resNode = endNode;
                 bool nextSegmentFound = false;
+                DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "CountSegments: " + endNode.CountSegments());
                 for (int s = 0; s < endNode.CountSegments(); s++) {
                     ushort newSegmentId = endNode.GetSegment(s);
-                    // NetSegment netSegment = netManager.m_segments.m_buffer[segmentId];
-                    if (segmentId != newSegmentId && netManager.IsSameName(segmentId, newSegmentId)) {
+                    if (segmentId != newSegmentId && netManager.IsSameName(segmentId, newSegmentId) && !visitedSegments.Contains(newSegmentId)) {
                         segmentId = newSegmentId;
-                        // nextSegmentFound = true;
+                        nextSegmentFound = true;
+                        DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "NextSegmentFound: " + segmentId + ", breaking for");
+                        resNode = netManager.m_nodes.m_buffer[netManager.m_segments.m_buffer[segmentId].GetOtherNode(segment.m_endNode)];
                         break;
                     }
                 }
-                if (!nextSegmentFound)
+                if (!nextSegmentFound) {
+                    NetNode startNode = netManager.m_nodes.m_buffer[segment.m_startNode];
+                    for (int s = 0; s < startNode.CountSegments(); s++) {
+                        ushort newSegmentId = startNode.GetSegment(s);
+                        if (segmentId != newSegmentId && netManager.IsSameName(segmentId, newSegmentId) && !visitedSegments.Contains(newSegmentId)) {
+                            segmentId = newSegmentId;
+                            nextSegmentFound = true;
+                            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "NextSegmentFound: " + segmentId + ", breaking for");
+                            resNode = netManager.m_nodes.m_buffer[netManager.m_segments.m_buffer[segmentId].GetOtherNode(segment.m_startNode)];
+                            break;
+                        }
+                    }
+                }
+                if (!nextSegmentFound) {
+                    DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "NextSegmentNotFound, breaking while");
                     break;
-                if (segmentId == netSegments[0]) // circle
-                    break;
+                }
+                //if (segmentId == netSegments[0]) // circle, not necessary
+                //    break;
             }
             while (true);
-            return endNode.m_position;
+            return resNode.Value.m_position;
         }
 
         public List<MyBuilding> Buildings {
