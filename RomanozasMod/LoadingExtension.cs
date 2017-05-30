@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+//using System.Threading.Tasks;
 using ColossalFramework;
 using ColossalFramework.Plugins;
 using ColossalFramework.UI;
@@ -48,14 +48,34 @@ namespace RomanozasMod
         private void btnRename_Click(UIComponent component, UIMouseEventParameter eventParam) {
             // SimulationManager.instance.SimulationPaused = true;
             // Debug.developerConsoleVisible = true;
-            rename();
+            rename2();
+        }
+
+        void rename2() {
+            try {
+                DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Started");
+                Street[] streets = MyUtils.GetStreets();
+                DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Streets: " + streets.Length);
+                foreach (Street street in streets) {
+                    DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Street: " + street.Name);
+                    int buildingNo = 1;
+                    foreach (MyBuilding building in street.Buildings /*.OrderBy(b => Vector3.SqrMagnitude(b.Position - street.BeginPosition))*/) {
+                        DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Building: " + street.Name + " " + buildingNo);
+                        //building.SetStreetNumber(street.Name, buildingNo);
+                        buildingNo++;
+                    }
+                }
+                MessageManager.instance.QueueMessage(new Message("Nowe numery domów! Znowu trzeba zmieniać pieczątki :("));
+            }
+            catch(Exception ex) {
+                DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, ex.ToString());
+            }
         }
 
         void rename() {
-            //try {
+            try {
                 DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, "Started");
                 DistrictManager districtManager = Singleton<DistrictManager>.instance;
-                NetManager netManager = Singleton<NetManager>.instance;
 
                 Dictionary<int, string> districtNames = new Dictionary<int, string>();
                 District[] districts = districtManager.m_districts.m_buffer;
@@ -72,6 +92,10 @@ namespace RomanozasMod
                         districtNames[i] = districtName.Replace("\"", string.Empty); // usuń z nazw dzielnic cudzysłowia
                     i++;
                 }
+
+                NetManager netManager = Singleton<NetManager>.instance;
+                NetSegment[] segments = netManager.m_segments.m_buffer;
+
                 DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "District list build");
                 Dictionary<int, int> districtBuildingCount = new Dictionary<int, int>();
                 BuildingManager buildingManager = Singleton<BuildingManager>.instance;
@@ -210,11 +234,11 @@ namespace RomanozasMod
                                 else
                                     newName = string.Format("{0}, {1} {2}", typeName, districtName, lastCount);
 
-                            if (!customized && oldName != newName) {
-                                var res = buildingManager.SetBuildingName(j, newName);
-                                while (res.MoveNext()) { } // CitizenManager.instance.StartCoroutine(CitizenManager.instance.SetCitizenName(id, name));
+                                if (!customized && oldName != newName) {
+                                    var res = buildingManager.SetBuildingName(j, newName);
+                                    while (res.MoveNext()) { } // CitizenManager.instance.StartCoroutine(CitizenManager.instance.SetCitizenName(id, name));
+                                }
                             }
-                        }
                             else
                                 DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "District name not found for districtId = " + districtId);
                         }
@@ -224,10 +248,10 @@ namespace RomanozasMod
                 }
                 // send message
                 MessageManager.instance.QueueMessage(new Message("Nowe numery domów! Znowu trzeba zmieniać pieczątki :("));
-            //}
-            //catch (Exception ex) {
-            //    DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, ex.Message);
-            //}
+            }
+            catch (Exception ex) {
+                DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, ex.Message);
+            }
         }
 
         private static string toRoman(int number, bool upperCase = true) {
