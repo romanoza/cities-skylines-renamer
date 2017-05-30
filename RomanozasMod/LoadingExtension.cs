@@ -58,10 +58,17 @@ namespace RomanozasMod
                 DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Streets: " + streets.Length);
                 foreach (Street street in streets) {
                     DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Street: " + street.Name);
+                    DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Budynków: " + street.Buildings.Count);
                     int buildingNo = 1;
-                    foreach (MyBuilding building in street.Buildings /*.OrderBy(b => Vector3.SqrMagnitude(b.Position - street.BeginPosition))*/) {
+                    street.Buildings.Sort((b1, b2) =>
+                    {
+                        float m1 = Vector3.SqrMagnitude(b1.Position - street.BeginPosition);
+                        float m2 = Vector3.SqrMagnitude(b2.Position - street.BeginPosition);
+                        return m1 < m2 ? -1 : (m1 == m2 ? 0 : 1);
+                    });
+                    foreach (MyBuilding building in street.Buildings/*.OrderBy(b => Vector3.SqrMagnitude(b.Position - street.BeginPosition))*/) {
                         DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Building: " + street.Name + " " + buildingNo);
-                        //building.SetStreetNumber(street.Name, buildingNo);
+                        building.SetStreetNumber(street.Name, buildingNo);
                         buildingNo++;
                     }
                 }
