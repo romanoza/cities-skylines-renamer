@@ -53,13 +53,12 @@ namespace RomanozasMod
 
         void rename2() {
             try {
-                DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Started");
+                DateTime start = DateTime.Now;
                 List<Street> streets = MyUtils.GetStreets();
+                DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "GetStreets() " + (DateTime.Now - start));
                 MyUtils.FillBuildings(streets);
-                DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Streets: " + streets.Count);
+                DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "FillBuildings() " + (DateTime.Now - start));
                 foreach (Street street in streets) {
-                    DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Street: " + street.Name);
-                    DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Budynków: " + street.Buildings.Count);
                     int buildingNo = 1;
                     street.Buildings.Sort((b1, b2) =>
                     {
@@ -68,10 +67,10 @@ namespace RomanozasMod
                         return m1 < m2 ? -1 : (m1 == m2 ? 0 : 1);
                     });
                     foreach (MyBuilding building in street.Buildings/*.OrderBy(b => Vector3.SqrMagnitude(b.Position - street.BeginPosition))*/) {
-                        DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Building: " + street.Name + " " + buildingNo);
                         building.SetStreetNumber(street.Name, buildingNo);
                         buildingNo++;
                     }
+                    DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, $"SetStreetNumber({street.Name}) " + (DateTime.Now - start));
                 }
                 MessageManager.instance.QueueMessage(new Message("Nowe numery domów! Znowu trzeba zmieniać pieczątki :("));
             }

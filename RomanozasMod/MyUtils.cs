@@ -35,13 +35,13 @@ namespace RomanozasMod
                 if (resNode == null)
                     resNode = endNode;
                 bool nextSegmentFound = false;
-                DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "CountSegments: " + endNode.CountSegments());
+                
                 for (int s = 0; s < endNode.CountSegments(); s++) {
                     ushort newSegmentId = endNode.GetSegment(s);
                     if (segmentId != newSegmentId && netManager.IsSameName(segmentId, newSegmentId) && !visitedSegments.Contains(newSegmentId)) {
                         segmentId = newSegmentId;
                         nextSegmentFound = true;
-                        DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "NextSegmentFound: " + segmentId + ", breaking for");
+                        
                         resNode = netManager.m_nodes.m_buffer[netManager.m_segments.m_buffer[segmentId].GetOtherNode(segment.m_endNode)];
                         break;
                     }
@@ -53,14 +53,13 @@ namespace RomanozasMod
                         if (segmentId != newSegmentId && netManager.IsSameName(segmentId, newSegmentId) && !visitedSegments.Contains(newSegmentId)) {
                             segmentId = newSegmentId;
                             nextSegmentFound = true;
-                            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "NextSegmentFound: " + segmentId + ", breaking for");
+                            
                             resNode = netManager.m_nodes.m_buffer[netManager.m_segments.m_buffer[segmentId].GetOtherNode(segment.m_startNode)];
                             break;
                         }
                     }
                 }
                 if (!nextSegmentFound) {
-                    DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "NextSegmentNotFound, breaking while");
                     break;
                 }
             }
@@ -234,8 +233,9 @@ namespace RomanozasMod
                     newName = $"{typeName}, {streetName} {number} ({districtName})";
 
                 if (!customized && oldName != newName) {
-                    var res = buildingManager.SetBuildingName(BuildingIndex, newName);
-                    while (res.MoveNext()) { } // CitizenManager.instance.StartCoroutine(CitizenManager.instance.SetCitizenName(id, name));
+                    buildingManager.StartCoroutine(buildingManager.SetBuildingName(BuildingIndex, newName));
+                    //var res = buildingManager.SetBuildingName(BuildingIndex, newName);
+                    //while (res.MoveNext()) { } // CitizenManager.instance.StartCoroutine(CitizenManager.instance.SetCitizenName(id, name));
                 }
             }
         }
@@ -249,8 +249,8 @@ namespace RomanozasMod
             List<MyBuilding> buildings = new List<MyBuilding>();
             BuildingManager buildingManager = Singleton<BuildingManager>.instance;
             NetManager netManager = Singleton<NetManager>.instance;
-            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Buildings Count: " + buildingManager.m_buildingCount);
-            DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Buildings Length: " + buildingManager.m_buildings.m_buffer.Length);
+            //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Buildings Count: " + buildingManager.m_buildingCount);
+            //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Buildings Length: " + buildingManager.m_buildings.m_buffer.Length);
             ushort i = 0;
             foreach (Building building in buildingManager.m_buildings.m_buffer) {
                 if ((building.m_flags & Building.Flags.Created) == Building.Flags.Created && (building.m_flags & Building.Flags.Completed) == Building.Flags.Completed) {
