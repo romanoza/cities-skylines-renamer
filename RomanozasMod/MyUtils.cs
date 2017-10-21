@@ -137,8 +137,18 @@ namespace RomanozasMod
             BuildingManager buildingManager = Singleton<BuildingManager>.instance;
             DistrictManager districtManager = Singleton<DistrictManager>.instance;
 
-            string oldName = buildingManager.GetBuildingName(BuildingIndex, instanceId);
-            string typeName = null;
+            string fullOldName = buildingManager.GetBuildingName(BuildingIndex, instanceId);
+            string oldName;
+            if(!string.IsNullOrEmpty(fullOldName)) {
+                int colonPos = fullOldName.IndexOf(',');
+                if(colonPos < 0)
+                    colonPos = fullOldName.Length;
+                oldName = fullOldName.Substring(0, colonPos);
+            }
+            else
+                oldName = null;
+
+            string newName = oldName;
             //if (oldName != null) {
             //    string[] fullNameParts = oldName.Split(',');
             //    if (fullNameParts.Length > 0)
@@ -146,42 +156,42 @@ namespace RomanozasMod
             //};
 
             Building building = buildingManager.m_buildings.m_buffer[BuildingIndex];
-            bool customized = oldName != null && (oldName.Contains(" im. ") || (oldName.Contains("\"")));
+            // bool customized = fullOldName != null && (fullOldName.Contains(" im. ") || (fullOldName.Contains("\"")));
             BuildingAI buildingAI = building.Info.m_buildingAI;
 
-            if ((string.IsNullOrEmpty(typeName) || /* zawsze renumeruj szkoły */ buildingAI is SchoolAI) && !customized) {
+            if ((string.IsNullOrEmpty(newName) /*||*/ /* zawsze renumeruj szkoły */ /*buildingAI is SchoolAI*/) /*&& !customized*/) {
 
                 switch (building.Info.GetService()) {
-                    case ItemClass.Service.Beautification: typeName = "Park"; break;
-                    case ItemClass.Service.PoliceDepartment: typeName = "Posterunek"; break;
-                    case ItemClass.Service.FireDepartment: typeName = "Remiza"; break;
+                    case ItemClass.Service.Beautification: newName = "Park"; break;
+                    case ItemClass.Service.PoliceDepartment: newName = "Posterunek"; break;
+                    case ItemClass.Service.FireDepartment: newName = "Remiza"; break;
                     case ItemClass.Service.HealthCare:
                         if (buildingAI is CemeteryAI) {
                             if ((buildingAI as CemeteryAI).m_graveCount > 0)
-                                typeName = "Cmentarz";
+                                newName = "Cmentarz";
                             else
-                                typeName = "Krematorium";
+                                newName = "Krematorium";
                             // DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, string.Format("Burial rate {0}, corpse capacity {1}, grave count {2}", (buildingAI as CemeteryAI).m_burialRate, (buildingAI as CemeteryAI).m_corpseCapacity, (buildingAI as CemeteryAI).m_graveCount));
                         }
                         else
-                            typeName = "Przychodnia";
+                            newName = "Przychodnia";
                         break;
                     case ItemClass.Service.Education:
                         if (buildingAI is SchoolAI) {
                             SchoolAI ai = buildingAI as SchoolAI;
                             int max = new int[] { ai.m_workPlaceCount0, ai.m_workPlaceCount1, ai.m_workPlaceCount2, ai.m_workPlaceCount3 }.Max();
                             if (max == ai.m_workPlaceCount0) {
-                                if (!customized)
-                                    typeName = $"SP {++spNumber}";
+                               // if (!customized)
+                                    newName = $"SP {++spNumber}";
                             }
                             else
                                 if (max == ai.m_workPlaceCount1) {
-                                if (!customized)
-                                    typeName = $"{LoadingExtension.toRoman(++loNumber)} LO";
+                              //  if (!customized)
+                                    newName = $"{LoadingExtension.toRoman(++loNumber)} LO";
                             }
                             else
                                 if (max == ai.m_workPlaceCount2)
-                                typeName = $"{LoadingExtension.toRoman(++unNumber)} Uniwersytet";
+                                newName = $"{LoadingExtension.toRoman(++unNumber)} Uniwersytet";
                             //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, string.Format("Student count {0}, m_workPlaceCount0 {1}, m_workPlaceCount1 {2}", (buildingAI as SchoolAI).m_studentCount, (buildingAI as SchoolAI).m_workPlaceCount0, (buildingAI as SchoolAI).m_workPlaceCount1));
                             //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "buildingAI type: " + buildingAI.GetType().ToString());
                             //DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "subservice: " + building.Info.GetSubService().ToString());
@@ -191,34 +201,40 @@ namespace RomanozasMod
                         break;
                     case ItemClass.Service.Residential:
                         switch (building.Info.GetSubService()) {
-                            case ItemClass.SubService.ResidentialLow: typeName = "Dom"; break;
-                            case ItemClass.SubService.ResidentialHigh: typeName = "Kamienica"; break;
+                            case ItemClass.SubService.ResidentialLow: newName = "Dom"; break;
+                            case ItemClass.SubService.ResidentialHigh: newName = "Kamienica"; break;
                         }
                         break;
                     case ItemClass.Service.Office:
-                        typeName = "Biuro"; break;
+                        newName = "Biuro"; break;
                     case ItemClass.Service.Commercial:
                         switch (building.Info.GetSubService()) {
-                            case ItemClass.SubService.CommercialLeisure: typeName = "Restauracja"; break;
-                            case ItemClass.SubService.CommercialTourist: typeName = "Hotel"; break;
-                            case ItemClass.SubService.CommercialLow: typeName = "Sklep"; break;
-                            case ItemClass.SubService.CommercialHigh: typeName = "Dom Handlowy"; break;
-                            default: typeName = "Sklep"; break;
+                            case ItemClass.SubService.CommercialLeisure: newName = "Restauracja"; break;
+                            case ItemClass.SubService.CommercialTourist: newName = "Hotel"; break;
+                            case ItemClass.SubService.CommercialLow: newName = "Sklep"; break;
+                            case ItemClass.SubService.CommercialHigh: newName = "Dom Handlowy"; break;
+                            default: newName = "Sklep"; break;
                         }
                         break;
                     case ItemClass.Service.Industrial:
                         switch (building.Info.GetSubService()) {
-                            case ItemClass.SubService.IndustrialGeneric: typeName = "Fabryka"; break;
-                            case ItemClass.SubService.IndustrialFarming: typeName = "Gospodarstwo"; break;
-                            case ItemClass.SubService.IndustrialForestry: typeName = "Leśnictwo"; break;
-                            case ItemClass.SubService.IndustrialOre: typeName = "Huta"; break;
-                            case ItemClass.SubService.IndustrialOil: typeName = "Rafineria"; break;
+                            case ItemClass.SubService.IndustrialGeneric: newName = "Fabryka"; break;
+                            case ItemClass.SubService.IndustrialFarming: newName = "Gospodarstwo"; break;
+                            case ItemClass.SubService.IndustrialForestry: newName = "Leśnictwo"; break;
+                            case ItemClass.SubService.IndustrialOre: newName = "Huta"; break;
+                            case ItemClass.SubService.IndustrialOil: newName = "Rafineria"; break;
                         };
+                        break;
+                    case ItemClass.Service.Garbage:
+                        newName = "Wysypisko";
                         break;
                 }
             }
 
-            if (typeName != null) {
+            //if(fullOldName.IsNullOrWhiteSpace())
+            //    fullOldName = typeName;
+
+            if (!string.IsNullOrEmpty(newName)) {
                 int districtId = (int)districtManager.GetDistrict(building.m_position);
                 string districtName;
                 if (districtId == 0)
@@ -226,14 +242,14 @@ namespace RomanozasMod
                 else
                     districtName = districtManager.GetDistrictName(districtId);
 
-                string newName;
+                string fullNewName;
                 if (districtId == 0)
-                    newName = $"{typeName}, {streetName} {number}";
+                    fullNewName = $"{newName}, {streetName} {number}";
                 else
-                    newName = $"{typeName}, {streetName} {number} ({districtName})";
+                    fullNewName = $"{newName}, {streetName} {number} ({districtName})";
 
-                if (!customized && oldName != newName) {
-                    buildingManager.StartCoroutine(buildingManager.SetBuildingName(BuildingIndex, newName));
+                if (fullOldName != fullNewName) {
+                    buildingManager.StartCoroutine(buildingManager.SetBuildingName(BuildingIndex, fullNewName));
                     //var res = buildingManager.SetBuildingName(BuildingIndex, newName);
                     //while (res.MoveNext()) { } // CitizenManager.instance.StartCoroutine(CitizenManager.instance.SetCitizenName(id, name));
                 }
