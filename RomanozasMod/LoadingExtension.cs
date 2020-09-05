@@ -56,24 +56,6 @@ namespace RomanozasMod
                 DateTime start = DateTime.Now;
                 List<Street> streets = MyUtils.GetStreets();
                 DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "GetStreets() " + (DateTime.Now - start));
-
-                try
-                {
-                    MyUtils.SaveStreets(streets);
-                }
-                catch(Exception ex)
-                {
-                    DebugOutputPanel.AddMessage(PluginManager.MessageType.Error, ex.ToString());
-                    if (ex.InnerException != null)
-                    {
-                        DebugOutputPanel.AddMessage(PluginManager.MessageType.Error, ex.InnerException.ToString());
-                        if (ex.InnerException.InnerException != null)
-                            DebugOutputPanel.AddMessage(PluginManager.MessageType.Error, ex.InnerException.InnerException.ToString());
-                    }
-                    DebugOutputPanel.AddMessage(PluginManager.MessageType.Error, ex.StackTrace);
-                    DebugOutputPanel.AddMessage(PluginManager.MessageType.Error, ex.Source);
-                }
-                
                 MyUtils.FillBuildings(streets);
                 DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "FillBuildings() " + (DateTime.Now - start));
                 foreach (Street street in streets) {
@@ -90,10 +72,11 @@ namespace RomanozasMod
                     }
                     DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, $"SetStreetNumber({street.Name}) " + (DateTime.Now - start));
                 }
+                MyUtils.SaveStreets(streets);
                 MessageManager.instance.QueueMessage(new Message("Ojoj! Nowe numery domów! Znowu trzeba zmieniać pieczątki :("));
             }
             catch(Exception ex) {
-                DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, ex.ToString());
+                DebugOutputPanel.AddMessage(PluginManager.MessageType.Error, ex.ToString());
             }
         }
 

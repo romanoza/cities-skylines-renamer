@@ -130,6 +130,7 @@ namespace RomanozasMod
 
         public Building Building;
         public ushort BuildingIndex;
+        public string FullNewName;
 
         InstanceID instanceId = new InstanceID();
         int spNumber = 0, loNumber = 0, unNumber = 0;
@@ -243,14 +244,14 @@ namespace RomanozasMod
                 else
                     districtName = districtManager.GetDistrictName(districtId);
 
-                string fullNewName;
+                //string fullNewName;
                 if (districtId == 0)
-                    fullNewName = $"{newName}, {streetName} {number}";
+                    FullNewName = $"{newName}, {streetName} {number}";
                 else
-                    fullNewName = $"{newName}, {streetName} {number} ({districtName})";
+                    FullNewName = $"{newName}, {streetName} {number} ({districtName})";
 
-                if (fullOldName != fullNewName) {
-                    buildingManager.StartCoroutine(buildingManager.SetBuildingName(BuildingIndex, fullNewName));
+                if (fullOldName != FullNewName) {
+                    buildingManager.StartCoroutine(buildingManager.SetBuildingName(BuildingIndex, FullNewName));
                     //var res = buildingManager.SetBuildingName(BuildingIndex, newName);
                     //while (res.MoveNext()) { } // CitizenManager.instance.StartCoroutine(CitizenManager.instance.SetCitizenName(id, name));
                 }
@@ -333,11 +334,21 @@ namespace RomanozasMod
             lines.Add("Streets:");
             lines.Add("");
 
-            foreach (Street s in streets)
-                lines.Add(s.Name);
+            //foreach (Street s in streets)
+            //    lines.Add(s.Name);
 
             //lines.Add(Environment.NewLine);
-            //lines.AddRange(streets.Select(s => s.Name));
+            lines.AddRange(streets.Select(s => s.Name).OrderBy(s => s));
+
+            lines.Add("");
+            lines.Add("Schools:");
+            lines.Add("");
+
+            lines.AddRange(streets
+                .SelectMany(s => s.Buildings)
+                .Where(b => b.Building.Info.GetService() == ItemClass.Service.Education)
+                .Select(b => b.FullNewName)
+                .OrderBy(s => s));
 
             File.WriteAllLines("D:\\city.txt", lines.ToArray());
         }
