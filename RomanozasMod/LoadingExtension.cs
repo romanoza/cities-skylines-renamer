@@ -254,7 +254,7 @@ namespace RomanozasMod
                     //yield return null;
                 }
                 // send message
-                MessageManager.instance.QueueMessage(new Message("Nowe numery domów! Znowu trzeba zmieniać pieczątki :("));
+                MessageManager.instance.QueueMessage(new Message("Ojoj! Nowe numery domów! Znowu trzeba zmieniać pieczątki :("));
             }
             catch (Exception ex) {
                 DebugOutputPanel.AddMessage(ColossalFramework.Plugins.PluginManager.MessageType.Message, ex.Message);
