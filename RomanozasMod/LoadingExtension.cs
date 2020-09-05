@@ -55,6 +55,7 @@ namespace RomanozasMod
             try {
                 DateTime start = DateTime.Now;
                 List<Street> streets = MyUtils.GetStreets();
+                MyUtils.SaveStreets(streets);
                 DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "GetStreets() " + (DateTime.Now - start));
                 MyUtils.FillBuildings(streets);
                 DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "FillBuildings() " + (DateTime.Now - start));
@@ -72,7 +73,7 @@ namespace RomanozasMod
                     }
                     DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, $"SetStreetNumber({street.Name}) " + (DateTime.Now - start));
                 }
-                MessageManager.instance.QueueMessage(new Message("Nowe numery domów! Znowu trzeba zmieniać pieczątki :("));
+                MessageManager.instance.QueueMessage(new Message("Ojoj! Nowe numery domów! Znowu trzeba zmieniać pieczątki :("));
             }
             catch(Exception ex) {
                 DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, ex.ToString());

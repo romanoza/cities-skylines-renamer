@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 // using System.Threading.Tasks;
@@ -324,6 +325,16 @@ namespace RomanozasMod
                 streets.Add(street);
             }
             street.AddSegment(netSegment);
+        }
+
+        internal static void SaveStreets(List<Street> streets)
+        {
+            List<string> lines = new List<string>();
+            lines.Add("Streets:");
+            lines.Add(Environment.NewLine);
+            lines.AddRange(streets.Select(s => s.Name));
+
+            File.WriteAllLines("D:\\city.streets.txt", lines);
         }
     }
 
