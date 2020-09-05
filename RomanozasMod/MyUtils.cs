@@ -331,10 +331,15 @@ namespace RomanozasMod
         {
             List<string> lines = new List<string>();
             lines.Add("Streets:");
-            lines.Add(Environment.NewLine);
-            lines.AddRange(streets.Select(s => s.Name));
+            lines.Add("");
 
-            File.WriteAllLines("D:\\city.streets.txt", lines);
+            foreach (Street s in streets)
+                lines.Add(s.Name);
+
+            //lines.Add(Environment.NewLine);
+            //lines.AddRange(streets.Select(s => s.Name));
+
+            File.WriteAllLines("D:\\city.txt", lines.ToArray());
         }
     }
 
