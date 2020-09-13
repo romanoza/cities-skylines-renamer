@@ -350,6 +350,15 @@ namespace RomanozasMod
                 .Select(b => b.FullNewName)
                 .OrderBy(s => s));
 
+            lines.Add("Post Offices:");
+            lines.Add("");
+
+            lines.AddRange(streets
+                .SelectMany(s => s.Buildings)
+                .Where(b => b.Building.Info.GetSubService() == ItemClass.SubService.PublicTransportPost)
+                .Select(b => b.FullNewName)
+                .OrderBy(s => s));
+
             File.WriteAllLines("D:\\city.txt", lines.ToArray());
         }
     }
